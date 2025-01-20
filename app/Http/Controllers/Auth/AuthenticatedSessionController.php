@@ -16,14 +16,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): JsonResponse
     {
-        if(!$request->authenticate()){
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-
-        {
+        if ($request->authenticate()) {
 
             $user = $request->user();
 
@@ -35,6 +28,10 @@ class AuthenticatedSessionController extends Controller
                 'user' => $user,
                 'token' => $token->plainTextToken
             ]);
+        } else {
+            return response()->json([
+                'message' => 'Invalid credentials',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
     }
