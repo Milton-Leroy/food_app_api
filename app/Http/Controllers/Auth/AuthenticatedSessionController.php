@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -16,21 +17,28 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): JsonResponse
     {
-        if ($request->authenticate()) {
+        try {
+            // Authenticate the user
+            $request->authenticate();
 
+            // Get the authenticated user
             $user = $request->user();
 
+            // Delete old tokens
             $user->tokens()->delete();
 
+            // Create a new token
             $token = $user->createToken('api-token');
 
             return response()->json([
                 'user' => $user,
-                'token' => $token->plainTextToken
+                'token' => $token->plainTextToken,
             ]);
-        } else {
+        } catch (ValidationException $e) {
+            // Handle invalid credentials
             return response()->json([
                 'message' => 'Invalid credentials',
+                'errors' => $e->errors(),
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
